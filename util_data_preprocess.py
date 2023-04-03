@@ -148,3 +148,4 @@ def demo_stat(demo):
     print(demo.groupby('center').count())
     print(demo[['exe','center']].groupby('center').describe())
     print(demo[['attention','center']].groupby('center').describe())
+    print(demo[['age','center']].groupby('center').describe())
