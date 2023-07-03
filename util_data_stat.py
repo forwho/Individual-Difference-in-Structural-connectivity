@@ -1,4 +1,5 @@
 import numpy as np
+import nibabel as nib
 from pygam import LinearGAM, s
 from scipy import stats
 from research_toolbox import rt_stat
@@ -19,6 +20,41 @@ def map_dv2brod(dv):
         else:
             dvs.append(np.mean(dv[np.asarray(index)]))
     return np.asarray(dvs)
+
+def roi_brain_organization(atlas):
+    if atlas=='gordon':
+        latlas_file='%s/data/atlas/gordon/Parcels_L.func.gii'
+        ratlas_file='%s/data/atlas/gordon/Parcels_R.func.gii'
+        latlas=nib.load(latlas_file).agg_data()
+        print(latlas)
+
+def gordon_micrometrics():
+    lsurf_164=nib.load('%s/data/atlas/gordon/Parcels_L_164.func.gii' % research_toolbox.__path__[0]).agg_data()
+    rsurf_164=nib.load('%s/data/atlas/gordon/Parcels_R_164.func.gii' % research_toolbox.__path__[0]).agg_data()
+    lsurf_32=nib.load('%s/data/atlas/gordon/Parcels_L.func.gii' % research_toolbox.__path__[0]).agg_data()
+    rsurf_32=nib.load('%s/data/atlas/gordon/Parcels_R.func.gii' % research_toolbox.__path__[0]).agg_data()
+
+    lhisgradient2=nib.load('%s/data/Brain_Organization/HistGradients_G2/HistGradients_G2.lh.fs32.func.gii' % research_toolbox.__path__[0]).agg_data()
+    rhisgradient2=nib.load('%s/data/Brain_Organization/HistGradients_G2/HistGradients_G2.rh.fs32.func.gii' % research_toolbox.__path__[0]).agg_data()
+    lhisgradient1=nib.load('%s/data/Brain_Organization/HistGradients_G1/HistGradients_G1.lh.fs32.func.gii' % research_toolbox.__path__[0]).agg_data()
+    rhisgradient1=nib.load('%s/data/Brain_Organization/HistGradients_G1/HistGradients_G1.rh.fs32.func.gii' % research_toolbox.__path__[0]).agg_data()
+
+    lmyelin=nib.load('%s/data/Brain_Organization/Myelin/source-hcps1200_desc-myelinmap_space-fsLR_den-32k_hemi-L_feature.func.gii' % research_toolbox.__path__[0]).agg_data()
+    rmyelin=nib.load('%s/data/Brain_Organization/Myelin/source-hcps1200_desc-myelinmap_space-fsLR_den-32k_hemi-R_feature.func.gii' % research_toolbox.__path__[0]).agg_data()
+
+    hisgradient1=np.zeros(333)
+    hisgradient2=np.zeros(333)
+    myelin=np.zeros(333)
+
+    for i in range(1,162):
+        hisgradient1[i-1]=np.nanmean(lhisgradient1[np.squeeze(lsurf_32)==i])
+        hisgradient2[i-1]=np.nanmean(lhisgradient2[np.squeeze(lsurf_32)==i])
+        myelin[i-1]=np.nanmean(lmyelin[np.squeeze(lsurf_32)==i])
+    for i in range(162,334):
+        hisgradient1[i-1]=np.nanmean(rhisgradient1[np.squeeze(rsurf_32)==i])
+        hisgradient2[i-1]=np.nanmean(rhisgradient2[np.squeeze(rsurf_32)==i])
+        myelin[i-1]=np.nanmean(rmyelin[np.squeeze(rsurf_32)==i])
+    return [hisgradient2, myelin, hisgradient1]
 
 
 def network_data(demo,nets,center_label,cognition):
@@ -130,3 +166,6 @@ def nested_2fold_cv_train(demo,nets,cognition,fold_n=2,is_act=True,norm_method='
         n+=1
 
     return best_l1_lambdas, best_rvals, best_maes, best_models, best_trainers, best_trans, test_hats, test_labels
+
+if __name__=='__main__':
+    print(roi_brain_organization('gordon'))

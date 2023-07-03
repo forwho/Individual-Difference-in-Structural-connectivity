@@ -28,6 +28,14 @@ def dv_extract_data(path, demo_file,atlas='bna'):
             den_net=data['schaefer400_sift_invnodevol_radius2_count_connectivity']
             count_net=data['schaefer400_sift_radius2_count_connectivity']
             len_net=data['schaefer400_radius2_meanlength_connectivity']
+        elif atlas=='gordon':
+            den_net=data['gordon333_sift_invnodevol_radius2_count_connectivity']
+            count_net=data['gordon333_sift_radius2_count_connectivity']
+            len_net=data['gordon333_radius2_meanlength_connectivity']
+        elif atlas=='power':
+            den_net=data['power264_sift_invnodevol_radius2_count_connectivity']
+            count_net=data['power264_sift_radius2_count_connectivity']
+            len_net=data['power264_radius2_meanlength_connectivity']
         den_nets.append(den_net)
         count_nets.append(count_net)
         len_nets.append(len_net)
@@ -65,6 +73,18 @@ def extract_retest_data(path,atlas='bna'):
                 len_mat=data['schaefer400_radius2_meanlength_connectivity']
                 data=loadmat(path+'\\'+file+'B.mat')
                 mat2=data['schaefer400_sift_radius2_count_connectivity']
+            elif atlas=='gordon':
+                data=loadmat(path+'\\'+file+'A.mat')
+                mat1=data['gordon333_sift_radius2_count_connectivity']
+                len_mat=data['gordon333_radius2_meanlength_connectivity']
+                data=loadmat(path+'\\'+file+'B.mat')
+                mat2=data['gordon333_sift_radius2_count_connectivity']
+            elif atlas=='power':
+                data=loadmat(path+'\\'+file+'A.mat')
+                mat1=data['power264_sift_radius2_count_connectivity']
+                len_mat=data['power264_radius2_meanlength_connectivity']
+                data=loadmat(path+'\\'+file+'B.mat')
+                mat2=data['power264_sift_radius2_count_connectivity']
             mats_pair.append((mat1,mat2))
             mats.append(mat1)
             len_mats.append(len_mat)

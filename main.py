@@ -52,11 +52,12 @@ def main_1_preprocess(atlas='bna',edge_thre=-10000, corr_thre=0.85):
     demo=demo.loc[rval>=corr_thre,:]
     np.savez('data/1_preprocess/nets_demo_%s_%02d_%.2f_preprocess.npz' % (atlas, edge_thre, corr_thre),count_nets=combat_count_nets,len_nets=len_nets,demo=demo)
 
-def main_2_dv(atlas='bna',edge_thre=0, corr_thre=0.85):
+def main_2_dv(atlas='bna',edge_thre=-10000, corr_thre=0.85):
     # read data of networks
     aging_data=np.load('data/1_preprocess/nets_demo_%s_%02d_%.2f_preprocess.npz' % (atlas, edge_thre, corr_thre),allow_pickle=True)
     demo=pd.DataFrame(aging_data['demo'],columns=['num','id','age','sex','center','exe','attention'])
     retest_data=np.load('data/1_preprocess/retest_nets_demo_%s.npz' % atlas,allow_pickle=True)
+    print(retest_data.files)
     hcpy_data=np.load('data/1_preprocess/hcpy_nets_demo_%s.npz' % atlas,allow_pickle=True)
 
     # calculate the dvs
@@ -83,46 +84,59 @@ def main_2_dv(atlas='bna',edge_thre=0, corr_thre=0.85):
         wind_dv[i]=wind_dv[i]-slope*intra_dv
 
     # save data of dvs
-    np.save('data/2_dv/aging_dv.npy',aging_dv)
-    np.save('data/2_dv/hca_dv.npy',hca_dv)
-    np.save('data/2_dv/camcan_dv.npy',camcan_dv)
-    np.save('data/2_dv/babri_dv.npy',babri_dv)
-    np.save('data/2_dv/hcpy_dv.npy',hcpy_dv)
-    np.save('data/2_dv/intra_dv.npy',intra_dv)
-    np.savez('data/2_dv/wind_dv_age.npz', wind_dv=wind_dv, mean_age=mean_age)
+    np.save('data/2_dv/aging_dv_%s_%04d.npy' % (atlas,edge_thre),aging_dv)
+    np.save('data/2_dv/hca_dv_%s_%04d.npy' % (atlas,edge_thre),hca_dv)
+    np.save('data/2_dv/camcan_dv_%s_%04d.npy' % (atlas,edge_thre),camcan_dv)
+    np.save('data/2_dv/babri_dv_%s_%04d.npy' % (atlas,edge_thre),babri_dv)
+    np.save('data/2_dv/hcpy_dv_%s_%04d.npy' % (atlas,edge_thre),hcpy_dv)
+    np.save('data/2_dv/intra_dv_%s_%04d.npy' % (atlas,edge_thre),intra_dv)
+    np.savez('data/2_dv/wind_dv_age_%s_%04d.npz' % (atlas,edge_thre), wind_dv=wind_dv, mean_age=mean_age)
 
-def main_2_plot_1_s1_s2(atlas='bna'):
+def main_2_plot_1_s1_s2(atlas='bna',edge_thre=-10000):
     # print statistics of demographic information
     data=np.load('data/1_preprocess/nets_demo_%s.npz' % atlas,allow_pickle=True)
     demo=pd.DataFrame(data['demo'],columns=['num','id','age','sex','center','exe','attention'])
     udp.demo_stat(demo)
 
     # read dv data and save them in dscaler.nii and nii.gz files
-    aging_dv=np.load('data/2_dv/aging_dv.npy')
-    hca_dv=np.load('data/2_dv/hca_dv.npy')
-    camcan_dv=np.load('data/2_dv/camcan_dv.npy')
-    babri_dv=np.load('data/2_dv/babri_dv.npy')
-    hcpy_dv=np.load('data/2_dv/babri_dv.npy')
-    intra_dv=np.load('data/2_dv/intra_dv.npy')
-    wind_data=np.load('data/2_dv/wind_dv_age.npz')
+    aging_dv=np.load('data/2_dv/aging_dv_%s_%04d.npy' % (atlas,edge_thre))
+    hca_dv=np.load('data/2_dv/hca_dv_%s_%04d.npy' % (atlas,edge_thre))
+    camcan_dv=np.load('data/2_dv/camcan_dv_%s_%04d.npy' % (atlas,edge_thre))
+    babri_dv=np.load('data/2_dv/babri_dv_%s_%04d.npy' % (atlas,edge_thre))
+    hcpy_dv=np.load('data/2_dv/babri_dv_%s_%04d.npy' % (atlas,edge_thre))
+    intra_dv=np.load('data/2_dv/intra_dv_%s_%04d.npy' % (atlas,edge_thre))
+    wind_data=np.load('data/2_dv/wind_dv_age_%s_%04d.npz' % (atlas,edge_thre))
     wind_dv=wind_data['wind_dv']
     mean_age=wind_data['mean_age']
+    if atlas=='gordon':
+        vis_wb.array2dscalar(aging_dv,'data/figure_data/figure_1/aging_dv_%s.dscalar.nii' % atlas,mode=atlas)
+        vis_wb.array2dscalar(hcpy_dv,'data/figure_data/figure_1/hcpy_dv_%s.dscalar.nii' % atlas,mode=atlas)
+        vis_wb.array2dscalar(intra_dv,'data/figure_data/figure_1/intra_dv_%s.dscalar.nii' % atlas,mode=atlas)
+        vis_wb.array2dscalar(hca_dv,'data/figure_data/figure_1/hca_dv_%s.dscalar.nii' % atlas,mode=atlas)
+        vis_wb.array2dscalar(camcan_dv,'data/figure_data/figure_1/camcan_dv_%s.dscalar.nii' % atlas,mode=atlas)
+        vis_wb.array2dscalar(babri_dv,'data/figure_data/figure_1/babri_dv_%s.dscalar.nii' % atlas,mode=atlas)
+    elif atlas=='bna':
+        vis_wb.array2dscalar(aging_dv[0:210],'data/figure_data/figure_1/aging_dv_%s_%04d.dscalar.nii' % (atlas,edge_thre),mode=atlas)
+        vis_wb.save_subcortical(aging_dv,'data/figure_data/figure_1/aging_dv_%s_%04d.nii.gz' % (atlas,edge_thre))
+        vis_wb.array2dscalar(hcpy_dv[0:210],'data/figure_data/figure_1/hcpy_dv_%s_%04d.dscalar.nii' % (atlas,edge_thre),mode=atlas)
+        vis_wb.save_subcortical(hcpy_dv,'data/figure_data/figure_1/hcpy_dv_%s_%04d.nii.gz' % (atlas,edge_thre))
 
-    vis_wb.array2dscalar(aging_dv[0:210],'data/figure_data/figure_1/aging_dv.dscalar.nii',mode=atlas)
-    vis_wb.save_subcortical(aging_dv,'data/figure_data/figure_1/aging_dv.nii.gz')
-    vis_wb.array2dscalar(hcpy_dv[0:210],'data/figure_data/figure_1/hcpy_dv.dscalar.nii',mode=atlas)
-    vis_wb.save_subcortical(hcpy_dv,'data/figure_data/figure_1/hcpy_dv.nii.gz')
+        vis_wb.array2dscalar(intra_dv[0:210],'data/figure_data/figure_s1/intra_dv_%s_%04d.dscalar.nii' % (atlas,edge_thre),mode=atlas)
+        vis_wb.save_subcortical(intra_dv,'data/figure_data/figure_s1/intra_dv_%s_%04d.nii.gz' % (atlas,edge_thre))
 
-    vis_wb.array2dscalar(intra_dv[0:210],'data/figure_data/figure_s1/intra_dv.dscalar.nii',mode=atlas)
-    vis_wb.save_subcortical(intra_dv,'data/figure_data/figure_s1/intra_dv.nii.gz')
-
-    vis_wb.array2dscalar(hca_dv[0:210],'data/figure_data/figure_s2/hca_dv.dscalar.nii',mode=atlas)
-    vis_wb.save_subcortical(hca_dv,'data/figure_data/figure_s2/hca_dv.nii.gz')
-    vis_wb.array2dscalar(camcan_dv[0:210],'data/figure_data/figure_s2/camcan_dv.dscalar.nii',mode=atlas)
-    vis_wb.save_subcortical(camcan_dv,'data/figure_data/figure_s2/camcan_dv.nii.gz')
-    vis_wb.array2dscalar(babri_dv[0:210],'data/figure_data/figure_s2/babri_dv.dscalar.nii',mode=atlas)
-    vis_wb.save_subcortical(babri_dv,'data/figure_data/figure_s2/babri_dv.nii.gz')
-
+        vis_wb.array2dscalar(hca_dv[0:210],'data/figure_data/figure_s2/hca_dv_%s_%04d.dscalar.nii' % (atlas,edge_thre),mode=atlas)
+        vis_wb.save_subcortical(hca_dv,'data/figure_data/figure_s2/hca_dv_%s_%04d.nii.gz' % (atlas,edge_thre))
+        vis_wb.array2dscalar(camcan_dv[0:210],'data/figure_data/figure_s2/camcan_dv_%s_%04d.dscalar.nii' % (atlas,edge_thre),mode=atlas)
+        vis_wb.save_subcortical(camcan_dv,'data/figure_data/figure_s2/camcan_dv_%s_%04d.nii.gz' % (atlas,edge_thre))
+        vis_wb.array2dscalar(babri_dv[0:210],'data/figure_data/figure_s2/babri_dv_%s_%04d.dscalar.nii' % (atlas,edge_thre),mode=atlas)
+        vis_wb.save_subcortical(babri_dv,'data/figure_data/figure_s2/babri_dv_%s_%04d.nii.gz' % (atlas,edge_thre))
+    elif atlas=='aal':
+        vis_wb.array2nii(aging_dv,'data/figure_data/figure_1/aging_dv_%s.nii' % atlas,mode=atlas)
+        vis_wb.array2nii(hcpy_dv,'data/figure_data/figure_1/hcpy_dv_%s.nii' % atlas,mode=atlas)
+        vis_wb.array2nii(intra_dv,'data/figure_data/figure_1/intra_dv_%s.nii' % atlas,mode=atlas)
+        vis_wb.array2nii(hca_dv,'data/figure_data/figure_1/hca_dv_%s.nii' % atlas,mode=atlas)
+        vis_wb.array2nii(camcan_dv,'data/figure_data/figure_1/camcan_dv_%s.nii' % atlas,mode=atlas)
+        vis_wb.array2nii(babri_dv,'data/figure_data/figure_1/babri_dv_%s.nii' % atlas,mode=atlas)
     # plot figure 1C and print p values
     tmp_dv=(aging_dv-np.mean(aging_dv))/np.std(aging_dv)
     res=stats.kstest(tmp_dv,'norm',N=tmp_dv.shape[0])
@@ -134,15 +148,15 @@ def main_2_plot_1_s1_s2(atlas='bna'):
     mask = np.triu(np.ones_like(rvals, dtype=bool))
     f, ax = plt.subplots(figsize=(11, 9))
     cmap=mpl.colormaps['turbo']
-    sns.heatmap(rvals, mask=mask, cmap=cmap, vmax=1, 
+    sns.heatmap(rvals, mask=mask, cmap=cmap, vmin=0.75, vmax=1, 
             square=True, linewidths=.5, cbar_kws={"shrink": .5})
-    f.savefig('data/figure_data/figure_1/dv_site_corr.tiff',dpi=300)
+    f.savefig('data/figure_data/figure_1/dv_site_corr_%s_%04d.tiff' % (atlas,edge_thre),dpi=300)
 
     sitename=['HCPY','Aging','HCA','CAMCAN','BABRI']
-    rval, pval, xrand=rt_stat.space_correction.spatial_autocorrelation_correction(hcpy_dv,aging_dv,xrand=None,repeatn=1000,method='pearson',atlas='bna')
+    rval, pval, xrand=rt_stat.space_correction.spatial_autocorrelation_correction(hcpy_dv,aging_dv,xrand=None,repeatn=1000,method='pearson',atlas=atlas)
     for i in range(all_dvs.shape[0]):
         for j in range(i+1,all_dvs.shape[0]):
-            rval, pval, xrand=rt_stat.space_correction.spatial_autocorrelation_correction(all_dvs[i],all_dvs[j],xrand,repeatn=1000,method='pearson',atlas='bna')
+            rval, pval, xrand=rt_stat.space_correction.spatial_autocorrelation_correction(all_dvs[i],all_dvs[j],xrand,repeatn=1000,method='pearson',atlas=atlas)
             print("%s-%s: rval is %.3f and pval is %.6f" % (sitename[i],sitename[j],rval,pval))
 
     # plot figure 1D-F and print statisticc data
@@ -152,8 +166,13 @@ def main_2_plot_1_s1_s2(atlas='bna'):
     print('Normative test for mean age: %.6f' % res.pvalue)
 
     rvals[pvals>thre]=np.nan
-    vis_wb.array2dscalar(rvals[0:210],'data/figure_data/figure_1/corr_dv_age.dscalar.nii',mode=atlas)
-    vis_wb.save_subcortical(rvals,'data/figure_data/figure_1/corr_dv_age.nii.gz')
+    if atlas=='gordon':
+        vis_wb.array2dscalar(rvals,'data/figure_data/figure_1/corr_dv_age_%s.dscalar.nii' % atlas,mode=atlas)
+    elif atlas=='bna':
+        vis_wb.array2dscalar(rvals[0:210],'data/figure_data/figure_1/corr_dv_age_%s_%04d.dscalar.nii' % (atlas,edge_thre),mode=atlas)
+        vis_wb.save_subcortical(rvals,'data/figure_data/figure_1/corr_dv_age_%s_%04d.nii.gz' % (atlas,edge_thre))
+    elif atlas=='aal':
+        vis_wb.array2nii(rvals,'data/figure_data/figure_1/corr_dv_age_%s.nii' % atlas,mode=atlas)
 
     mean_dvs=np.mean(wind_dv,axis=1)
     std_dvs=np.std(wind_dv,axis=1)
@@ -162,62 +181,76 @@ def main_2_plot_1_s1_s2(atlas='bna'):
 
     scatter_kws={'alpha':1,'s':70,'color':'#E6550D','linewidths':1,'edgecolors':'000000','alpha':0.5}
     line_kws={'linewidth':5,'color':'#E6550D'}
-    rtv_stat.corr_plot(mean_age,mean_dvs,'Mean age', 'Mean variation',1, scatter_kws, line_kws, 'data/figure_data/figure_1/corr_meanvar_age.tiff')
-    rtv_stat.corr_plot(mean_age,std_dvs,'Mean age', 'Standard deviation of variation',1, scatter_kws, line_kws, 'data/figure_data/figure_1/corr_stdvar_age.tiff')
+    rtv_stat.corr_plot(mean_age,mean_dvs,'Mean age', 'Mean variation',1, scatter_kws, line_kws, 'data/figure_data/figure_1/corr_meanvar_age_%s_%04d.tiff' % (atlas,edge_thre))
+    rtv_stat.corr_plot(mean_age,std_dvs,'Mean age', 'Standard deviation of variation',1, scatter_kws, line_kws, 'data/figure_data/figure_1/corr_stdvar_age_%s_%04d.tiff' % (atlas,edge_thre))
 
-def main_2_plot_2():
+def main_2_plot_2(atlas,edge_thre=-10000):
 
     # plot figure 2B
-    aging_dv=np.load('data/2_dv/aging_dv.npy')
-    dv_yeo=ridvs.yeo_stat(aging_dv,is_print=True)
-    yeo_name=np.asarray(['VN', 'SM', 'DAN', 'VAN', 'Lim', 'FPN', 'DMN','Sub'])
+    aging_dv=np.load('data/2_dv/aging_dv_%s_%04d.npy' % (atlas,edge_thre))
+    dv_yeo,yeo_name=ridvs.yeo_stat(aging_dv,atlas,is_print=True)
     index=np.argsort(dv_yeo)
     dv_yeo=dv_yeo[index]
     yeo_name=yeo_name[index]
     color=np.asarray(['#822956', '#654765', '#70709D', '#29FF29', '#C3F22D', '#FFA129', '#FF2929', '#D684BD'])
     color=color[index]
-    rtv_stat.bar_plot(yeo_name, dv_yeo, color, False, 'data/figure_data/figure_2/dv_yeo_aging.tiff')
+    # rtv_stat.bar_plot(yeo_name, dv_yeo, color, False, 'data/figure_data/figure_2/dv_yeo_aging_%s.tiff' % atlas)
 
     # plot figure 2C and print statistic data
-    wind_data=np.load('data/2_dv/wind_dv_age.npz')
-    wind_dv_yeos=ridvs.yeo_stat_wind(wind_data['wind_dv'])
+    wind_data=np.load('data/2_dv/wind_dv_age_%s_%04d.npz' % (atlas,edge_thre))
+    wind_dv_yeos=ridvs.yeo_stat_wind(wind_data['wind_dv'],atlas)
     print(yeo_name)
     print(ridvs.dv_age_wind(wind_dv_yeos,wind_data['mean_age'],'spearman'))
 
-    xval=wind_data['mean_age']
-    yval=wind_dv_yeos
-    nanindex=np.isnan(xval)
-    xval=xval[np.logical_not(nanindex)]
-    yval=yval[np.logical_not(nanindex)]
-    for i in range(8):
-        scatter_kws={'alpha':1,'s':10,'edgecolors':'none','color':color[i]}
-        line_kws={'linewidth':3,'color':color[i]}
-        scatter_kws={'alpha':1,'s':70,'color':color[i],'linewidths':1,'edgecolors':'000000','alpha':0.5}
-        line_kws={'linewidth':5,'color':color[i]}
-        rtv_stat.corr_plot(xval,yval[:,i],'Mean age', 'Mean variation', 1,scatter_kws, line_kws, 'data/figure_data/figure_2/yeo_wind_%s_filter.tiff' % yeo_name[i])
+    # xval=wind_data['mean_age']
+    # yval=wind_dv_yeos
+    # nanindex=np.isnan(xval)
+    # xval=xval[np.logical_not(nanindex)]
+    # yval=yval[np.logical_not(nanindex)]
+    # for i in range(yeo_name.shape[0]):
+    #     scatter_kws={'alpha':1,'s':70,'color':str(color[i]),'linewidths':1,'edgecolors':'000000','alpha':0.5}
+    #     line_kws={'linewidth':5,'color':color[i]}
+    #     rtv_stat.corr_plot(xval,yval[:,i],'Mean age', 'Mean variation', 1,scatter_kws, line_kws, 'data/figure_data/figure_2/yeo_wind_%s_filter_%s.tiff' % (yeo_name[i],atlas))
 
-def main_3_plot_3(atlas='bna',edge_thre=0,corr_thre=0.85):
-
+def main_3_plot_3(atlas='bna',edge_thre=-10000,corr_thre=0.85):
+    aging_dv=np.load('data/2_dv/aging_dv_%s.npy' % atlas)
     # plot 3 A,B,D,E
-    aging_dv=np.load('data/2_dv/aging_dv.npy')
-    results, revo_data, val_datas=ridvs.corr_other_maps(aging_dv)
-
-    map_names=['CBF', 'Myelin', 'Gradients', 'HistGradients_G1','HistGradients_G2','L1Thickness','L2Thickness','L3Thickness','L4Thickness','L5Thickness','L6Thickness']
-    color=sns.color_palette()
-    indexes=[1,4]
-    for index in indexes:
-        vis_wb.array2dscalar(val_datas[index][0:210],'data/figure_data/figure_3/%s_map.dscalar.nii' % (map_names[index]),mode='bna')
-        scatter_kws={'alpha':1,'s':70,'edgecolors':'none','color':color[index],'linewidths':1,'edgecolors':'000000'}
-        line_kws={'linewidth':5,'color':color[index]}
-        rtv_stat.corr_plot(aging_dv[0:210],val_datas[index],'Individual variability', map_names[index],1,scatter_kws, line_kws, 'data/figure_data/figure_3/corr_dv_%s.tiff' % map_names[index])
-
+    if atlas=='bna':
+        results, revo_data, val_datas=ridvs.corr_other_maps(aging_dv)
+    
+        map_names=['CBF', 'Myelin', 'Gradients', 'HistGradients_G1','HistGradients_G2','L1Thickness','L2Thickness','L3Thickness','L4Thickness', 'L5Thickness','L6Thickness']
+        color=sns.color_palette()
+        indexes=[1,4]
+        for index in indexes:
+            vis_wb.array2dscalar(val_datas[index][0:210],'data/figure_data/figure_3/%s_map.dscalar.nii' % (map_names[index]),mode=atlas)
+            scatter_kws={'alpha':1,'s':70,'edgecolors':'none','color':color[index],'linewidths':1,'edgecolors':'000000'}
+            line_kws={'linewidth':5,'color':color[index]}
+            rtv_stat.corr_plot(aging_dv[0:210],val_datas[index],'Individual variability', map_names[index],1,scatter_kws, line_kws, 'data/figure_data/  figure_3/corr_dv_%s.tiff' % map_names[index])
+    elif atlas=='gordon':
+        val_datas=uds.gordon_micrometrics()
+        map_names=['HistGradients_G2', 'Myelin', 'HistGradeints_G1']
+        color=sns.color_palette()
+        indexes=[0,1,2]
+        for index in indexes:
+            vis_wb.array2dscalar(val_datas[index],'data/figure_data/figure_3/%s_map_%s.dscalar.nii' % (map_names[index],atlas),mode=atlas)
+            print(stats.spearmanr(aging_dv,val_datas[index]))
+            scatter_kws={'alpha':1,'s':70,'edgecolors':'none','color':color[index],'linewidths':1,'edgecolors':'000000'}
+            line_kws={'linewidth':5,'color':color[index]}
+            rtv_stat.corr_plot(aging_dv,val_datas[index],'Individual variability', map_names[index],1,scatter_kws, line_kws, 'data/figure_data/figure_3/corr_dv_%s_%s.tiff' % (map_names[index],atlas))
+    
     # plot 3 C,F
+    color=sns.color_palette()
     aging_data=np.load('data/1_preprocess/nets_demo_%s_%02d_%.2f_preprocess.npz' % (atlas, edge_thre, corr_thre),allow_pickle=True)
     results, mean_strength, short_percent=ridvs.len_nets_stat(aging_dv,aging_data['count_nets'],aging_data['len_nets'],2,method='number',mode='network',is_print=True)
-    vis_wb.array2dscalar(mean_strength[0,0:210],'data/figure_data/figure_3/short_strength_map.dscalar.nii',mode='bna')
+    if atlas=='bna':
+        vis_wb.array2dscalar(mean_strength[0,0:210],'data/figure_data/figure_3/short_strength_map_%s.dscalar.nii' % atlas,mode=atlas)
+    elif atlas=='gordon':
+        vis_wb.array2dscalar(mean_strength[0,:],'data/figure_data/figure_3/short_strength_map_%s.dscalar.nii' % atlas,mode=atlas)
+    elif atlas=='aal':
+        vis_wb.array2nii(mean_strength[0,:],'data/figure_data/figure_3/short_strength_map_%s.dscalar.nii' % atlas,mode=atlas)
     scatter_kws={'alpha':1,'s':70,'edgecolors':'none','color':color[0],'linewidths':1,'edgecolors':'000000'}
     line_kws={'linewidth':5,'color':color[0]}
-    rtv_stat.corr_plot(aging_dv,mean_strength[0],'Individual variability', 'Mean strength of short edges', 1,scatter_kws, line_kws, 'data/figure_data/figure_3/corr_dv_len.tiff')
+    rtv_stat.corr_plot(aging_dv,mean_strength[0],'Individual variability', 'Mean strength of short edges', 1,scatter_kws, line_kws, 'data/figure_data/figure_3/corr_dv_len_%s.tiff' % atlas)
 
 def main_3_len_replication(atlas='bna',edge_thre=0,corr_thre=0.85):
     # plot 3 C,F
@@ -261,6 +294,37 @@ def main_4_gene_pls():
 
     gene_weights.to_csv('data/4_gene_expression/true_gene_weights.csv', index=False)
     np.savez('data/4_gene_expression/psl_results.npz', xscores=xscores, r2=r2, xrot=xrot, yloadings=yloadings)
+
+def main_4_atlas_replicate(atlas):
+    pls_result=np.load('data/4_gene_expression/psl_results.npz')
+    gene_weights=pd.read_csv('data/4_gene_expression/true_gene_weights.csv')
+    xrot_pd=pd.DataFrame({'gene_symbol':gene_weights.loc[:,'gene_symbol'].to_numpy(),'xrot':pls_result['xrot']})
+    gene_exp=pd.read_csv('data/4_gene_expression/brain_genes_exp_%s_filter.csv' % atlas)
+    columns_name=gene_exp.columns
+    dev_loadings=[xrot_pd['xrot'][xrot_pd['gene_symbol']==symbol] for symbol in columns_name]
+    gene_score=stats.zscore(gene_exp,axis=1).dot(dev_loadings)
+    gene_score=np.squeeze(gene_score)
+    aging_dv=np.load('data/2_dv/aging_dv_%s.npy' % atlas)
+    if atlas=='gordon':
+        dv=aging_dv[0:161]
+    elif atlas=='aal':
+        dv=aging_dv[0:90:2]
+    rval, pval=stats.spearmanr(dv,gene_score,nan_policy='omit')
+    print("The relationship between gene expression and dv with %s atlas is: %.3f(%.3f)" % (atlas, rval, pval))
+    color_map=sns.color_palette("Set2")
+    scatter_kws={'alpha':1,'s':70,'edgecolors':'none','color':color_map[2],'linewidths':1,'edgecolors':'000000'}
+    line_kws={'linewidth':5,'color':color_map[2]}
+    rtv_stat.corr_plot(dv[np.bitwise_not(np.isnan(gene_score))],gene_score[np.bitwise_not(np.isnan(gene_score))],'Individual variability', 'Gene scores', 1,scatter_kws, line_kws, 'data/figure_data/figure_4/corr_gene_dv_%s.tiff' % atlas)
+    if atlas=='gordon':
+        plot_data=np.zeros(333)
+        plot_data[0:161]=gene_score
+        vis_wb.array2dscalar(plot_data,'data/figure_data/figure_4/gene_score_%s.dscalar.nii' % atlas,mode=atlas)
+    elif atlas=='aal':
+        plot_data=np.zeros(90)
+        plot_data[0:90:2]=gene_score
+        vis_wb.array2nii(plot_data,'data/figure_data/figure_4/gene_score_%s.nii' % atlas,mode=atlas)
+
+
 
 def main_4_gene_go_enrich():
     gene_weights=pd.read_csv('data/4_gene_expression/true_gene_weights.csv')
@@ -349,9 +413,34 @@ def main_5_ordered_2_fold_cv():
 
 if __name__=='__main__':
 
-    main_5_ordered_2_fold_cv()
-
-
+    # main_1_extract('gordon')
+    # main_1_extract_hcpy('gordon')
+    # main_1_extract_retest('gordon')
+    # main_1_preprocess('gordon')
+    # main_2_dv('gordon')
+    # main_2_plot_1_s1_s2('gordon')
+    # main_2_plot_2('gordon')
+    # main_3_plot_3(atlas='gordon',edge_thre=-10000,corr_thre=0.85)
+    # main_4_atlas_replicate('gordon') #0.359(0.000)
+    # main_1_extract('aal')
+    # main_1_extract_hcpy('aal')
+    # main_1_extract_retest('aal')
+    # main_1_preprocess('aal')
+    # main_2_dv('aal')
+    # main_2_plot_1_s1_s2('aal')
+    # main_2_plot_2('aal')
+    # main_3_plot_3(atlas='aal',edge_thre=-10000,corr_thre=0.85)
+    # main_4_atlas_replicate('aal') #0.676(0.000)
+    main_1_extract('aparc')
+    # main_1_extract_hcpy('aal')
+    # main_1_extract_retest('aal')
+    # main_1_preprocess('aal')
+    # main_2_dv('aal')
+    # edge_thres=[100,200,300,400,500]
+    # for thre in edge_thres:
+    #     main_1_preprocess('bna', thre)
+    #     main_2_dv('bna', thre)
+    #     main_2_plot_1_s1_s2('bna', thre)
 
 
     
